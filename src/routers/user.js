@@ -1,5 +1,6 @@
 const express = require('express')
-
+const multer = require('multer')
+const sharp = require('sharp')
 const User = require('../models/User')
 const auth = require('../middleware/auth')
 
@@ -83,6 +84,49 @@ router.post('/users/me/logoutall', auth, async(req, res) => {
         res.send()
     } catch (error) {
         res.status(500).send(error)
+    }
+})
+
+const upload = multer({
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, file, cb){
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            cb(new Error('Please upload an image'))
+        }
+        cb(undefined, true)
+    }
+})
+
+router.post('/users/me/avatar', auth, upload.single('avatar'), async(req, res) => {
+    // Upload a profile picture.
+    const buffer = await sharp(req.file.buffer).resize({ width: 400, height: 400}).png().toBuffer()
+    req.user.avatar = buffer
+    await req.user.save()
+    res.send({message: 'Picture uploaded successfully.'})
+},(error, req, res, next) => {
+    res.status(400).send({error: error.message})
+})
+
+router.delete('/users/me/avatar', auth, async(req, res) => {
+    // Remove profile picture.
+    req.user.avatar = undefined
+    await req.user.save()
+    res.send(req.user)
+})
+
+router.get('/users/:id/avatar', async(req, res) => {
+    // Get a user avatar by Id
+    try {
+        const user = await User.findById(req.params.id)
+        if (!user || !user.avatar) {
+            throw new Error({error: 'No avatar found'})
+        }  
+        res.set('Content-Type', 'image/jpg')
+        res.send(user.avatar)
+    } catch (error) {
+        res.status(404).send(error)
     }
 })
 
