@@ -74,11 +74,6 @@ const userSchema = mongoose.Schema({
             required: true
         }
     }],
-    parties_hosted: [{
-        party: {
-            type: mongoose.Schema.Types.ObjectId
-        }
-    }],
     parties_attended: [{
         party: {
             type: mongoose.Schema.Types.ObjectId
@@ -103,7 +98,7 @@ const userSchema = mongoose.Schema({
     timestamps: true
 })
 
-userSchema.virtual('parties', {
+userSchema.virtual('parties_hosted', {
 	ref: 'Party',
 	localField: '_id',
 	foreignField: 'host'
@@ -117,13 +112,6 @@ userSchema.pre('save', async function(next) {
     }
     next()
 })
-
-userSchema.methods.addToPartiesHosted = async function(partyId) {
-    const user = this
-    user.parties_hosted = user.parties_hosted.concat(partyId)
-    await user.save()
-    return user.parties_hosted
-}
 
 userSchema.methods.generateAuthToken = async function() {
     // Generate an auth token for a user.
