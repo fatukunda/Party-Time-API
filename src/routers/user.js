@@ -35,4 +35,21 @@ router.get('/users/me', auth, async(req, res) => {
 
 })
 
+router.patch('/users/me', auth, async(req, res) => {
+    // Edit user profile
+    const acceptedEditOptions = ['firstName', 'lastName', 'dob', 'gender', 'phoneNumber', 'email', 'password', 'bio']
+    const receivedOptions = Object.keys(req.body)
+    const isUpdateOption = receivedOptions.every((option) => acceptedEditOptions.includes(option))
+    if (!isUpdateOption) {
+        return res.status(400).send({ error: 'Invalid update options'})
+    }
+    try {
+        receivedOptions.forEach(option => req.user[option] = req.body[option])
+        await req.user.save()
+        res.send(req.user)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
 module.exports = router
