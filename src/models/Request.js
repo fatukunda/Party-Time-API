@@ -11,9 +11,13 @@ const requestSchema = mongoose.Schema({
         required: true,
         ref: 'Party'
     },
+    message: {
+        type: String,
+        trim: true
+    },
     status: {
         type: String,
-        enum: ['pending', 'accepted', 'rejected'],
+        enum: ['accepted', 'rejected'],
         default: 'pending'
     }
 }, {
