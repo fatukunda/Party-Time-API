@@ -47,7 +47,7 @@ test('Should signup a new user', async () => {
 test('Should login a registered user', async () => {
     const { email, password } = testUser1
         await request(app)
-        .post('/users/login')
-        .send({email, password})
-        .expect(201)
+            .post('/users/login')
+            .send({email, password})
+            .expect(201)
 })
