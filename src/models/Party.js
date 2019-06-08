@@ -30,19 +30,14 @@ const partySchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    guests: [{
-        guest: {
-            type: mongoose.Schema.Types.ObjectId
-        }
-    }],
-    guest_requests: [{
-        request: {
-            type: mongoose.Schema.Types.ObjectId
-        }
-    }]
-
 }, {
     timestamps: true
+})
+
+partySchema.virtual('party_requests', {
+    ref: 'Request',
+    localField: '_id',
+    foreignField: 'party'
 })
 
 const Party = mongoose.model('Party', partySchema)

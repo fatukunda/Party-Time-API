@@ -104,6 +104,12 @@ userSchema.virtual('parties_hosted', {
 	foreignField: 'host'
 })
 
+userSchema.virtual('user_requests', {
+    ref: 'Request',
+    localField: '_id',
+    foreignField: 'requestor'
+})
+
 userSchema.pre('save', async function(next) {
     // Hash the user password before saving it to the database.
     const user = this
