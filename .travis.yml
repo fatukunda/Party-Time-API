@@ -1,0 +1,13 @@
+language: node_js
+node_js: 
+  - "11"
+services: 
+  - mongodb
+cache: 
+  directories:
+    - "node_modules"
+  yarn: true
+script:
+  - yarn travis
+after_success:
+ - coveralls < coverage/lcov.info
