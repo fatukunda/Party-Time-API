@@ -40,6 +40,14 @@ partySchema.virtual('party_requests', {
     foreignField: 'party'
 })
 
+partySchema.methods.toJSON = function() {
+    // Remove some properties from the party response data.
+    const party = this
+    const partyObject = party.toObject()
+    delete partyObject.photos
+    return partyObject
+}
+
 const Party = mongoose.model('Party', partySchema)
 
 module.exports = Party
