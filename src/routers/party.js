@@ -21,6 +21,66 @@ router.post('/me/hosted_parties', auth, async(req, res) => {
     }
 })
 
+router.get('/me/hosted_parties', auth, async(req, res) => {
+    //Get a list of parties I've/I'm hosting
+    try {
+        await req.user.populate({
+            path: 'parties_hosted'
+        }).execPopulate()
+        res.send(req.user.parties_hosted)
+    } catch (error) {
+        res.status(500).send(error)
+    }
+})
+
+router.get('/me/hosted_parties/:id', auth, async(req, res) => {
+    // Get a single party hosted by a logged in user.
+    try {
+        const party = await Party.findOne({_id: req.params.id, host: req.user._id})
+        if (!party) {
+            return res.status(404).send({error: 'Party not found'})
+        }
+        res.send(party)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+router.patch('/me/hosted_parties/:id', auth, async(req, res) => {
+    // Edit party details of a logged in user
+    const allowedEditOptions = ['title', 'description', 'address', 'category']
+    const receivedOptions = Object.keys(req.body)
+    const isUpdateOption = receivedOptions.every(option => allowedEditOptions.includes(option))
+    if (!isUpdateOption) {
+        res.status(400).send({error: 'Invalid update option'})
+    }
+    try {
+        const party = await Party.findOne({_id: req.params.id, host: req.user._id})
+        if (!party) {
+            return res.status(404).send({error: 'Party not found'})
+        }
+        receivedOptions.forEach(option => party[option] = req.body[option])
+        party.save()
+        res.send(party)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+router.delete('/me/hosted_parties/:id', auth, async(req, res) => {
+    // Delete a party from a list of hosted parties.
+    try {
+        const party = await Party.findOne({_id: req.params.id, host: req.user._id})
+        if (!party) {
+            return res.status(404).send({error: 'Party not found'})
+        }
+        await party.remove()
+        res.send(party)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
 router.post('/me/hosted_parties/:id/images', auth, imageUpload.array('images', 6), async(req, res) => {
     // Upload images to a party you're hosting
     try {
@@ -82,18 +142,6 @@ router.get('/users/:user_id/hosted_parties/:id/images', async(req, res) => {
     }
 })
 
-router.get('/me/hosted_parties', auth, async(req, res) => {
-    //Get a list of parties I've/I'm hosting
-    try {
-        await req.user.populate({
-            path: 'parties_hosted'
-        }).execPopulate()
-        res.send(req.user.parties_hosted)
-    } catch (error) {
-        res.status(500).send(error)
-    }
-})
-
 router.get('/users/:id/hosted_parties', auth, async(req, res) => {
     // Get a list of parties hosted by a given user.
     try {
@@ -111,6 +159,7 @@ router.get('/users/:id/hosted_parties', auth, async(req, res) => {
 })
 
 router.get('/users/:id/hosted_parties/:party_id', auth, async(req, res) => {
+    //Get a single party hosted by a given user
     const user_id = req.params.id
     const party_id = req.params.party_id
     try {
