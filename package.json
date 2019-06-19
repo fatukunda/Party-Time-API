@@ -1,33 +1,33 @@
 {
-  "name": "party-time-api",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
-    "test": "env-cmd -f ./config/test.env jest --coverage",
-    "travis": "jest --coverage"
-  },
-  "jest": {
-    "testEnvironment": "node"
-  },
-  "author": "Frank Atukunda",
-  "license": "MIT",
-  "devDependencies": {
-    "coveralls": "^3.0.4",
-    "env-cmd": "^9.0.2",
-    "jest": "^24.8.0",
-    "nodemon": "^1.19.1",
-    "supertest": "^4.0.2"
-  },
-  "dependencies": {
-    "bcrypt": "^3.0.6",
-    "express": "^4.17.1",
-    "jsonwebtoken": "^8.5.1",
-    "mongodb": "^3.2.6",
-    "mongoose": "^5.5.12",
-    "multer": "^1.4.1",
-    "sharp": "^0.22.1",
-    "validator": "^11.0.0"
-  }
+	"name": "party-time-api",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"start": "node src/index.js",
+		"dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
+		"test": "env-cmd -f ./config/test.env jest --coverage --runInBand",
+		"travis": "jest --coverage --runInBand"
+	},
+	"jest": {
+		"testEnvironment": "node"
+	},
+	"author": "Frank Atukunda",
+	"license": "MIT",
+	"devDependencies": {
+		"coveralls": "^3.0.4",
+		"env-cmd": "^9.0.2",
+		"jest": "^24.8.0",
+		"nodemon": "^1.19.1",
+		"supertest": "^4.0.2"
+	},
+	"dependencies": {
+		"bcrypt": "^3.0.6",
+		"express": "^4.17.1",
+		"jsonwebtoken": "^8.5.1",
+		"mongodb": "^3.2.6",
+		"mongoose": "^5.5.12",
+		"multer": "^1.4.1",
+		"sharp": "^0.22.1",
+		"validator": "^11.0.0"
+	}
 }

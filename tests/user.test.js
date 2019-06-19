@@ -1,41 +1,12 @@
 const request = require('supertest');
-const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const app = require('../src/app');
 const User = require('../src/models/User');
+const { invalidUser, testUser1, populateUser, closeConnection } = require('./fixtures/base');
 
-const _id = new mongoose.Types.ObjectId();
+beforeEach(populateUser);
 
-const testUser1 = {
-	_id,
-	firstName: 'testUser',
-	lastName: 'testUserLast',
-	dob: new Date(1990, 4, 17),
-	email: 'testuser1@app.com',
-	password: 'testPass1234!',
-	tokens: [
-		{
-			token: jwt.sign({ _id }, process.env.JWT_KEY),
-		},
-	],
-};
-
-const invalidUser = {
-	_id,
-	firstName: 'testUser',
-	lastName: 'testUser2Last',
-	email: 'usernone@app.com',
-	password: 'userPass12!!',
-};
-
-beforeEach(async () => {
-	await User.deleteMany();
-	await new User(testUser1).save();
-});
-
-afterAll(async (done) => {
-	await mongoose.connection.close(done)
-})
+afterAll(closeConnection);
 
 test('Should signup a new user', async () => {
 	const newUser = {
@@ -62,6 +33,19 @@ test('Should signup a new user', async () => {
 	});
 	//Assert that the password was not stored in plain text
 	expect(user.password).not.toBe('MyPass2019!');
+});
+
+test('Should throw a 400 error when a wrong email format is provided', async () => {
+	const newUser = {
+		firstName: 'testUser3',
+		lastName: 'testUserlast3',
+		email: 'testuser@app',
+		password: 'MyPass2019!',
+	};
+	await request(app)
+		.post('/users')
+		.send(newUser)
+		.expect(400);
 });
 
 test('Should login a registered user', async () => {
@@ -93,9 +77,9 @@ test('Should get the user profile', async () => {
 		.expect(200);
 	// Assertions about the response
 	expect(response.body).toMatchObject({
-		firstName: 'testUser',
-		lastName: 'testUserLast',
-		email: 'testuser1@app.com',
+		firstName: 'luka',
+		lastName: 'modric',
+		email: 'lukam@app.com',
 	});
 });
 
@@ -136,6 +120,42 @@ test('Should upload a profile picture', async () => {
 	expect(user.avatar).toEqual(expect.any(Buffer));
 });
 
+test('Should get a given user avatar', async () => {
+	await request(app)
+		.post('/users/me/avatar')
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.attach('avatar', 'tests/fixtures/portfolio.png');
+	await request(app)
+		.get(`/users/${testUser1._id}/avatar`)
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.send()
+		.expect(200);
+});
+
+test('Should not get an avatar that is not available', async () => {
+	await request(app)
+		.get(`/users/${testUser1._id}/avatar`)
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.send()
+		.expect(404);
+});
+
+test('Should throw a 400 for an invalid image', async () => {
+	await request(app)
+		.post('/users/me/avatar')
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.attach('image', 'tests/fixtures/portfolio.png')
+		.expect(400);
+});
+
+test('Should delete an avatar', async () => {
+	await request(app)
+		.delete('/users/me/avatar')
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.send()
+		.expect(200);
+});
+
 test('Should edit user profile', async () => {
 	await request(app)
 		.patch('/users/me')
@@ -144,10 +164,10 @@ test('Should edit user profile', async () => {
 			firstName: 'Luka',
 			lastName: 'Modric',
 		})
-        .expect(200);
-    const user = await User.findById(testUser1._id)
-    expect(user.firstName).toEqual('Luka')
-    expect(user.lastName).toEqual('Modric')
+		.expect(200);
+	const user = await User.findById(testUser1._id);
+	expect(user.firstName).toEqual('Luka');
+	expect(user.lastName).toEqual('Modric');
 });
 
 test('Should not edit profile if unauthorized', async () => {
@@ -170,4 +190,28 @@ test('Should not update invalid field options', async () => {
 		.expect(400);
 	//Response assertions
 	expect(response.body.error).toBe('Invalid update options');
+});
+
+test('Should throw a 400 error if new email is invalid', async () => {
+	await request(app)
+		.patch('/users/me')
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.send({ email: 'admin@app' })
+		.expect(400);
+});
+
+test('Should log out a user', async () => {
+	await request(app)
+		.post('/users/me/logout')
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.send()
+		.expect(200);
+});
+
+test('Should log user out of all devices', async () => {
+	await request(app)
+		.post('/users/me/logoutall')
+		.set('Authorization', `Bearer ${testUser1.tokens[0].token}`)
+		.send()
+		.expect(200);
 });
