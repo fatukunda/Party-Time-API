@@ -33,6 +33,10 @@ beforeEach(async () => {
 	await new User(testUser1).save();
 });
 
+afterAll(async (done) => {
+	await mongoose.connection.close(done)
+})
+
 test('Should signup a new user', async () => {
 	const newUser = {
 		firstName: 'testUser',
